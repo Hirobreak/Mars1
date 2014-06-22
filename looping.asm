@@ -2,6 +2,7 @@
 	.data
 fout: .asciiz "pilas2.txt" 
 buffer: .resb 33
+list: .word 10, 20, 50, 100, 150, 200, 250, 300, 350, 400
 
 	.text
 	# open file
@@ -11,8 +12,11 @@ buffer: .resb 33
 	li $a2, 0
 	syscall #llamo a la instrucción
 	move $s6, $v0 #guardo el registro de información del archivo en s6
-	addi $t3, $zero, 15 #contador loop externo
 	la $s3, buffer #cargo buffer
+	addi $t6, $zero, 10
+	la $t5, list
+loop3:	
+	lw $t3, ($t5)
 	
 loop2:	li $a1, 200 #establesco 200 como random maximo
 	li $v0, 42 #instrucción para random
@@ -23,7 +27,7 @@ loop2:	li $a1, 200 #establesco 200 como random maximo
 	addi $sp, $sp, -16 #desplazo 3*4 bytes la pila
 	addi $t4, $zero, 44 #la coma
 	sw $t4, ($sp)	#guardo t2 en la pila
-	addi $sp, $sp, 4
+	addi $sp, $sp, 4 #avanzo en la pila
 	
 loop1:	addi $t0, $zero, 10
 	div  $a0, $t0       # $a0/10
@@ -72,7 +76,7 @@ loop1:	addi $t0, $zero, 10
 	addi $t3, $t3, -1 #resto para el contador
 	bne $t3, $zero, loop2 #regreso a generar otro numero
 	
-	addi $t4, $zero, 10 #enter
+	addi $t4, $zero, 47 #enter
 	sb $t4, buffer #agrego el enter al buffer
 	#write file
 	li $v0, 15
@@ -80,7 +84,10 @@ loop1:	addi $t0, $zero, 10
 	move $a1, $s3
 	li $a2, 1
 	syscall
-	
+
+	addi $t5, $t5, 4
+	addi $t6, $t6, -1
+	bne $t6, $zero, loop3
 	#close file
 	li $v0, 16
 	move $a0, $s6
