@@ -69,8 +69,17 @@ loop1:	addi $t0, $zero, 10
 	li $a2, 1
 	syscall
 	
-	addi $t3, $t3, -1
-	bne $t3, $zero, loop2
+	addi $t3, $t3, -1 #resto para el contador
+	bne $t3, $zero, loop2 #regreso a generar otro numero
+	
+	addi $t4, $zero, 10 #enter
+	sb $t4, buffer #agrego el enter al buffer
+	#write file
+	li $v0, 15
+	move $a0, $s6
+	move $a1, $s3
+	li $a2, 1
+	syscall
 	
 	#close file
 	li $v0, 16
