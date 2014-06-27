@@ -4,9 +4,8 @@ fout: .asciiz "bur_aleatorio.txt"
 coma: .asciiz ", " 
 .text
          li       $t0, 10        # $t0 = numero total de items en el arreglo
-         subi	  $t4, $t0, 1	 # $t4 = la posici?n del ?ltimo item del arreglo (Para no ponerle coma ya que es el ?ltimo n?mero)
          move     $s0, $zero     # $s0 = indice del arreglo
-         move     $t1, $zero     # $t2 = el valor que sera guardado en el arreglo
+         move     $t1, $zero     # $t1 = el valor que sera guardado en el arreglo
          
 #ABRIR ARCHIVO:
 #Aqu? se abre el archivo d?nde se guardar?n los n?meros aleatorios separadaos por comas.
@@ -46,7 +45,8 @@ loop_sin_coma:    sll      $s1, $s0, 2    # Byte Offset. $s1 es la direccion de 
 	 li   $v0, 15      		# Servicio 15 escribe archivos
 	 
 	 #Convertir primer digito a ASCII
-	 div  $t1, $t2       		# $a0/10
+	 addi $t2, $zero, 10 		#$t2 = 10 porque necesito saber si el n?mero a guardar es menor a 10
+	 div  $t1, $t2       		# $t1/10
 	 mflo $t6           		# $t6 = quotient
 	 mfhi $t5           		# $t5 = remainder
 	 addi $t5, $t5, 0x30    	# convertir a ASCII en $a1
@@ -60,7 +60,7 @@ loop_sin_coma:    sll      $s1, $s0, 2    # Byte Offset. $s1 es la direccion de 
 	 ##
 	 addi $t2, $zero, 10 		#$t2 = 10 porque necesito saber si el n?mero a guardar es menor a 10
 	 sle  $t3, $t1, $t2 		#$t3 = 1 s?lo si el n?mero a escribir es menor a 10
-	 bne $t3, $zero, write_end 	#Si el n?mero a escribir es mayor o igual a 10 termina el loop
+	 bne $t3, $zero, write_end 	#Si el n?mero a escribir es mayor o igual a 10 termina la iteracion
 	 ##
 	 
 	 li   $v0, 15      		# Servicio 15 escribe archivos
@@ -79,7 +79,7 @@ loop_sin_coma:    sll      $s1, $s0, 2    # Byte Offset. $s1 es la direccion de 
 	 ##
 	 addi $t2, $zero, 100 	#$t2 = 100 porque necesito saber si el n?mero a guardar es menor a 100
 	 sle  $t3, $t1, $t2 		#$t3 = 1 s?lo si el n?mero a escribir es menor a 100
-	 bne $t3, $zero, write_end 	#Si el n?mero a escribir es mayor o igual a 100 termina el loop
+	 bne $t3, $zero, write_end 	#Si el n?mero a escribir es mayor o igual a 100 termina la iteracion
 	 #Convertir tercer digito a ASCII
 	 li   $v0, 15      	# Servicio 15 escribe archivos
 	 addi $t5, $t5, 0x30    	# convertir a ASCII en $a1
@@ -93,7 +93,7 @@ loop_sin_coma:    sll      $s1, $s0, 2    # Byte Offset. $s1 es la direccion de 
 #Si nos pasamos del rango del arreglo, se acab? el programa. El indice del arreglo est? en $s0.
 
 write_end: addi $s0, $s0, 1
-	beq $s0, $t4, loop_con_coma
+	bne $s0, $t0, loop_con_coma
 	
 # FIN DEL LAZO
 	  # Close the file 
