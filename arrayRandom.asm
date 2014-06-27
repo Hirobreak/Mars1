@@ -42,53 +42,31 @@ loop_sin_coma:    sll      $s1, $s0, 2    # Byte Offset. $s1 es la direccion de 
 #GUARDAR EL NUMERO EN EL ARCHIVO Y EN EL ARREGLO:
 #Se guarda el n?mero aleatorio que esta en $t1
 	 sw       $t1, array($s1) 	# Guarda el valor aleatorio en el elemento del arreglo
-	 li   $v0, 15      		# Servicio 15 escribe archivos
 	 
-	 #Convertir primer digito a ASCII
-	 addi $t2, $zero, 10 		#$t2 = 10 porque necesito saber si el n?mero a guardar es menor a 10
-	 div  $t1, $t2       		# $t1/10
+	 #Loop para convertir digitos a ASCII
+	 addi $t4, $zero, 3		# $t4 = contador para 3 iteraciones (Inicia en 3)
+	 add $t6, $zero, $t1		#$t6 = el cociente del numero aleatorio en cada iteracion
+ascii_loop: addi $t2, $zero, 10 	#$t2 = 10 porque necesito dividir para 10 para sacar cada caracter 
+	 div  $t6, $t2       		# $t1/10
 	 mflo $t6           		# $t6 = quotient
 	 mfhi $t5           		# $t5 = remainder
 	 addi $t5, $t5, 0x30    	# convertir a ASCII en $a1
 	 sw $t5, ($sp)			#Guarda el caracter del n?mero en la pila
+	 addi $sp, $sp, 4 		#avanzo en la pila
+	 subi $t4, $t4, 1		#Resta 1 al contador
+	 bne $t4, $zero, ascii_loop	#Si el contador es 0 sale del loop
 	 
 	 #ESCRIBIR EL PRIMER DIGITO
+	 addi $t4, $zero, 3		# $t4 = contador para 3 iteraciones (Inicia en 3)
+write_loop: li   $v0, 15      		# Servicio 15 escribe archivos
 	 move $a0, $s6      		# file descriptor 
+	 subi $sp, $sp, 4 		#retrocedo en la pila
 	 move $a1, $sp			#$a1 = direccion del caracter a escribir (sacado de la pila)
 	 li   $a2, 1       		# longitud del buffer (hard-coded, un solo digito)
 	 syscall            		# llamar al servicio y escribir.
-	 ##
-	 addi $t2, $zero, 10 		#$t2 = 10 porque necesito saber si el n?mero a guardar es menor a 10
-	 sle  $t3, $t1, $t2 		#$t3 = 1 s?lo si el n?mero a escribir es menor a 10
-	 bne $t3, $zero, write_end 	#Si el n?mero a escribir es mayor o igual a 10 termina la iteracion
-	 ##
+	 subi $t4, $t4, 1		#Resta 1 al contador
+	 bne $t4, $zero, write_loop	#Si el contador es 0 sale del loop
 	 
-	 li   $v0, 15      		# Servicio 15 escribe archivos
-	 #Convertir segundo digito a ASCII
-	 addi $t2, $zero, 10 		#$t2 = 10
-	 div  $t6, $t2       		# $cociente anterior/10
-	 mflo $t6           		# $t6 = quotient
-	 mfhi $t5          		# $t5 = remainder
-	 addi $t5, $t5, 0x30    	# convertir a ASCII en $a1
-	 sw $t5, ($sp)			#Guarda el caracter del n?mero en la pila
-	 ##ESCRIBIR EL SEGUNDO DIGITO
-	 move $a0, $s6      		# file descriptor 
-	 move $a1, $sp			#$a1 = direccion del caracter a escribir (sacado de la pila)	
-	 li   $a2, 1       		# longitud del buffer (hard-coded, un solo digito)
-	 syscall
-	 ##
-	 addi $t2, $zero, 100 	#$t2 = 100 porque necesito saber si el n?mero a guardar es menor a 100
-	 sle  $t3, $t1, $t2 		#$t3 = 1 s?lo si el n?mero a escribir es menor a 100
-	 bne $t3, $zero, write_end 	#Si el n?mero a escribir es mayor o igual a 100 termina la iteracion
-	 #Convertir tercer digito a ASCII
-	 li   $v0, 15      	# Servicio 15 escribe archivos
-	 addi $t5, $t5, 0x30    	# convertir a ASCII en $a1
-	 sw $t5, ($sp)			#Guarda el caracter del n?mero en la pila
-	 ##ESCRIBIR EL TERCER DIGITO
-	 move $a0, $s6      		# file descriptor 
-	 move $a1, $sp			#$a1 = direccion del caracter a escribir (sacado de la pila)
-	 li   $a2, 1       		# longitud del buffer (hard-coded, un solo digito)
-	 syscall
 #CONTROL DE LAZO:
 #Si nos pasamos del rango del arreglo, se acab? el programa. El indice del arreglo est? en $s0.
 
