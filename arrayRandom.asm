@@ -1,14 +1,13 @@
 .data
 array:    .word     0 : 10       # almacenamiento para un arreglo de 10 items
 fout: .asciiz "bur_aleatorio.txt" 
-coma: .asciiz ", " 
 .text
-         li       $t0, 10        # $t0 = numero total de items en el arreglo
+         li       $t0, 20        # $t0 = numero total de items en el arreglo
          move     $s0, $zero     # $s0 = indice del arreglo
          move     $t1, $zero     # $t1 = el valor que sera guardado en el arreglo
          
 #ABRIR ARCHIVO:
-#Aqu? se abre el archivo d?nde se guardar?n los n?meros aleatorios separadaos por comas.
+#Aqu? se abre el archivo d?nde se guardar?n los n?meros aleatorios separadaos por enters.
 	 li   $v0, 13       # Servicio 13 abre archivos
   	 la   $a0, fout     # $a0 = nombre del archivo
   	 li   $a1, 1        # $a1 = argumento que indica si se escribe o se lee el archivo. 1 es para guardar
@@ -18,17 +17,20 @@ coma: .asciiz ", "
 #####
 
 #DAR FORMATO AL ARCHIVO
-#Para darle formato al archivo, hay que agregar comas y espacios tras cada n?mero.
-		 j loop_sin_coma #El primer n?mero no necesita una coma que lo preceda as? que se omite este paso
-loop_con_coma:	 li   $v0, 15       # Servicio 15 escribe archivos
+#Para darle formato al archivo, hay que agregar enters y espacios tras cada n?mero.
+		 j loop_sin_enter #El primer n?mero no necesita una enter que lo preceda as? que se omite este paso
+loop_con_enter:	 li   $v0, 15       # Servicio 15 escribe archivos
 		 move $a0, $s6      # file descriptor 
-	  	 la   $a1, coma   # direccion del buffer que tiene la coma y espacio
-	  	 li   $a2, 2       # longitud del buffer (hard-coded, coma y espacio son solo 2 caracteres)
+	  	 la   $a1, enter   # direccion del buffer que tiene la enter y espacio
+	  	 li   $a2, 2       # longitud del buffer (hard-coded, enter y espacio son solo 2 caracteres)
 	 	 syscall            # llamar al servicio y escribir.
+	 	 .data
+	  	 enter: .asciiz ", "
+		 .text
 #####
 #LAZO:        
 #Aqu? comienza el lazo en el que se recorre el arreglo y se le guarda un valor aleatorio.
-loop_sin_coma:    sll      $s1, $s0, 2    # Byte Offset. $s1 es la direccion de la posicion a la que apunta el indice. 
+loop_sin_enter:    sll      $s1, $s0, 2    # Byte Offset. $s1 es la direccion de la posicion a la que apunta el indice. 
          
 #GENERACION DE NUMERO ALEATORIO:
 
@@ -56,8 +58,20 @@ ascii_loop: addi $t2, $zero, 10 	#$t2 = 10 porque necesito dividir para 10 para 
 	 subi $t4, $t4, 1		#Resta 1 al contador
 	 bne $t4, $zero, ascii_loop	#Si el contador es 0 sale del loop
 	 
-	 #ESCRIBIR EL PRIMER DIGITO
+	 #Loop para escribir digitos
 	 addi $t4, $zero, 3		# $t4 = contador para 3 iteraciones (Inicia en 3)
+	 #Ajustar contador para cuando solo necesito 2 iteraciones
+	 addi $t3, $zero, 100		# $t3 = 100 para saber si el numero tiene menos de dos digitos
+	 slt $t2, $t1, $t3		# $t2 = 1 si el aleatorio es menor a 100
+	 beq $t2, $zero, write_loop	# Si el aleatorio es mayor a 100, comienza el loop con normalidad
+	 subi $t4, $t4, 1		# Se decrementa en 1 el contador ya que si es menor a 100 solo necesita dos caracteres
+	 subi $sp, $sp, 4 		#retrocedo en la pila para ignorar el cero a la izquierda
+	 #Ajustar contador para cuando solo necesito 1 iteracion
+	 addi $t3, $zero, 10		# $t3 = 10 para saber si el numero tiene menos de dos digitos
+	 slt $t2, $t1, $t3		# $t2 = 1 si el aleatorio es menor a 10
+	 beq $t2, $zero, write_loop	# Si el aleatorio es mayor a 10, comienza el loop con normalidad
+	 subi $t4, $t4, 1		# Se decrementa en 1 el contador ya que si es menor a 10 solo necesita un caracter
+	 subi $sp, $sp, 4 		#retrocedo en la pila para ignorar el cero a la izquierda
 write_loop: li   $v0, 15      		# Servicio 15 escribe archivos
 	 move $a0, $s6      		# file descriptor 
 	 subi $sp, $sp, 4 		#retrocedo en la pila
@@ -71,7 +85,7 @@ write_loop: li   $v0, 15      		# Servicio 15 escribe archivos
 #Si nos pasamos del rango del arreglo, se acab? el programa. El indice del arreglo est? en $s0.
 
 write_end: addi $s0, $s0, 1
-	bne $s0, $t0, loop_con_coma
+	bne $s0, $t0, loop_con_enter
 	
 # FIN DEL LAZO
 	  # Close the file 
