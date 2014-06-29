@@ -1,10 +1,11 @@
 
 	.data
 fout: .asciiz "pilas2.txt" 
-arreglo: .word  1 : 10
+arreglo: .word  1 : 401
 buffer: .resb 33
 	.text
 	
+	li $s3, 2
 	# open file
 	li $v0, 13 #instruccion abrir archivo
 	la $a0, fout #parametro nombre
@@ -12,14 +13,15 @@ buffer: .resb 33
 	li $a2, 0
 	syscall #llamo a la instrucción
 	move $s6, $v0 #guardo el registro de información del archivo en s6
+set:
 	li $s0, 0 #indice del arreglo
-	la $s3, buffer #cargo buffer
 	addi $sp, $sp, -16 #bajo en la pila
 	addi $t2, $zero, 0 #cargo para comparar el Null
 	addi $t5, $zero, 32 #cargo para comparar el espacio
 	addi $t3, $zero, 44 #cargo para comparar la coma
 	addi $t9, $zero, 47 #cargo para comparar el slash
 	move $t0, $zero #contador de iteraciones lectura de numeros
+	move $t8, $zero
 loop3:
 	add $t7, $zero, $zero #contador de digitos del numero
 	#read file
@@ -65,7 +67,10 @@ loop2:	lw $t1, ($sp) #cargo el primer valor de la pila
 
 	beq $zero, $zero, loop3 #regreso al loop de sacar numeros
 salSls:
+	move $s2, $t0
 	#BubbleSort
+	subi $t0, $t0, 1
+loop5:	move $t4, $t0
 	li $s0, 0 #inicializo el indice del arreglo
 	addi $s0, $s0, 4
 loop4:	lw $t1, arreglo($s0)
@@ -78,13 +83,27 @@ loop4:	lw $t1, arreglo($s0)
 	sw $t2, arreglo($s0)
 	addi $s0, $s0, 4
 ordered:
+	#lw $t8, arreglo($s0)
+	#add $a0, $zero, $t8 #preparo para imprimir
+	#li $v0, 1 #intruccion print 
+	#syscall #ejecuto
+	subi $t4, $t4, 1
+	bne $t4, $zero, loop4
+	subi $t0, $t0, 1
+	bne $t0, $zero, loop5
+	
+	li $s0, 0 #inicializo el indice del arreglo
+imp:	
+	addi $s0, $s0, 4
 	lw $t8, arreglo($s0)
 	add $a0, $zero, $t8 #preparo para imprimir
 	li $v0, 1 #intruccion print 
 	syscall #ejecuto
-	subi $t0, $t0, 1
-	bne $t0, $zero, loop4
-	
+	subi $s2, $s2, 1
+	bne $s2, $zero, imp
+
+	subi $s3, $s3, 1
+	bne $s3, $zero, set
 	#close file
 	li $v0, 16
 	move $a0, $s6
