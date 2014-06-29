@@ -114,51 +114,73 @@ imp:
 	sw $t4, ($sp)	#guardo t2 en la pila
 	addi $sp, $sp, 4 #avanzo en la pila
 	
-loopn1:	addi $t0, $zero, 10
-	div  $a0, $t0       # $a0/10
-	mflo $a1           # $a1 = quotient
-	mfhi $t0           # $t0 = remainder
-	addi $a0, $t0, 0x30    # convert to ASCII
-	add $t2, $a0, $zero	#cargo en t2 el residuo en ascii
-	sw $t2, ($sp)	#guardo t2 en la pila
-	
-	addi $sp, $sp, 4
-	add $a0, $a1, $zero
-	bne $a0, $zero, loopn1
-	#Grabar primer numero
-	addi $sp, $sp, -4 #me desplazo 4 bytes hacia abajo en la pila para el primer digito
-	#write file
-	li $v0, 15 #instruccion write
-	move $a0, $s5 #cargo la descripcion del archivo que tenia guardada en s6
-	move $a1, $sp #pongo  el valor del digito en ascii como parametro
-	li $a2, 1 
-	syscall #exporto el num al archivo
-	#Grabar segundo numero
-	addi $sp, $sp, -4
-	#write file
-	li $v0, 15
-	move $a0, $s5
-	move $a1, $sp
-	li $a2, 1
-	syscall
-	#Grabar tercer numero
-	addi $sp, $sp, -4
-	#write file
-	li $v0, 15
-	move $a0, $s5
-	move $a1, $sp
-	li $a2, 1
-	syscall
-	#Grabar coma
-	addi $sp, $sp, -4
-	#write file
-	li $v0, 15
-	move $a0, $s5
-	move $a1, $sp
-	li $a2, 1
-	syscall
-	
-	bne $s2, $zero, imp #si aun hay numeros que imprimir regreso a imp
+#DAR FORMATO AL ARCHIVO INSERT SORT:
+#Para darle formato al archivo, hay que agregar enters y espacios tras cada n?mero.
+	 	 addi   $s2, $s2, 2	# se le suman 2 a $s2 porque el indice comienza en en 1
+		 addi	$s1, $zero, 1	# $s1 indice del arreglo
+		 j	loop_sin_coma	#El primer n?mero no necesita una enter que lo preceda as? que se omite este paso
+loop_con_coma:	 li	$v0, 15       	# Servicio 15 escribe archivos
+		 move	$a0, $s5      	# file descriptor
+		 li 	$t5, ','	# $t5 = la coma
+	 	 sw 	$t5, ($sp)	# Guarda la coma en la pila
+	 	 move	$a1, $sp	# Mover de la pila al argumento del syscall
+	  	 li   	$a2, 1       	# longitud del buffer (hard-coded, solo un caracter)
+	 	 syscall            	# llamar al servicio y escribir.
+	 	 li	$v0, 15       	# Servicio 15 escribe archivos
+		 move	$a0, $s5      	# file descriptor
+		 li 	$t5, ' '	# $t5 = la coma
+	 	 sw 	$t5, ($sp)	# Guarda la coma en la pila
+	 	 move	$a1, $sp	# Mover de la pila al argumento del syscall
+	  	 li   	$a2, 1       	# longitud del buffer (hard-coded, solo un caracter)
+	 	 syscall            	# llamar al servicio y escribir.
+#####	
+#GUARDAR EL NUMERO EN EL ARCHIVO SORT:
+#Se guarda el n?mero aleatorio que esta en $t1
+loop_sin_coma:
+	 sll	$s0, $s1, 2		# $s0 = apunta a la direccion de s1 (Byte offset)
+	 lw     $t1, arreglo($s0) 	# Carga el valor en el elemento del arreglo
+	 
+	 #Loop para convertir digitos a ASCII
+	 addi $t4, $zero, 3		# $t4 = contador para 3 iteraciones (Inicia en 3)
+	 add $t6, $zero, $t1		#$t6 = el cociente del numero aleatorio en cada iteracion
+ascii_loop: addi $t2, $zero, 10 	#$t2 = 10 porque necesito dividir para 10 para sacar cada caracter 
+	 div  $t6, $t2       		# $t1/10
+	 mflo $t6           		# $t6 = quotient
+	 mfhi $t5           		# $t5 = remainder
+	 addi $t5, $t5, 0x30    	# convertir a ASCII en $a1
+	 sw $t5, ($sp)			#Guarda el caracter del n?mero en la pila
+	 addi $sp, $sp, 4 		#avanzo en la pila
+	 subi $t4, $t4, 1		#Resta 1 al contador
+	 bne $t4, $zero, ascii_loop	#Si el contador es 0 sale del loop
+	 
+	 #Loop para escribir digitos
+	 addi $t4, $zero, 3		# $t4 = contador para 3 iteraciones (Inicia en 3)
+	 #Ajustar contador para cuando solo necesito 2 iteraciones
+	 addi $t3, $zero, 100		# $t3 = 100 para saber si el numero tiene menos de dos digitos
+	 slt $t2, $t1, $t3		# $t2 = 1 si el aleatorio es menor a 100
+	 beq $t2, $zero, write_loop	# Si el aleatorio es mayor a 100, comienza el loop con normalidad
+	 subi $t4, $t4, 1		# Se decrementa en 1 el contador ya que si es menor a 100 solo necesita dos caracteres
+	 subi $sp, $sp, 4 		#retrocedo en la pila para ignorar el cero a la izquierda
+	 #Ajustar contador para cuando solo necesito 1 iteracion
+	 addi $t3, $zero, 10		# $t3 = 10 para saber si el numero tiene menos de dos digitos
+	 slt $t2, $t1, $t3		# $t2 = 1 si el aleatorio es menor a 10
+	 beq $t2, $zero, write_loop	# Si el aleatorio es mayor a 10, comienza el loop con normalidad
+	 subi $t4, $t4, 1		# Se decrementa en 1 el contador ya que si es menor a 10 solo necesita un caracter
+	 subi $sp, $sp, 4 		#retrocedo en la pila para ignorar el cero a la izquierda
+write_loop: li   $v0, 15      		# Servicio 15 escribe archivos
+	 move $a0, $s5      		# file descriptor 
+	 subi $sp, $sp, 4 		#retrocedo en la pila
+	 move $a1, $sp			#$a1 = direccion del caracter a escribir (sacado de la pila)
+	 li   $a2, 1       		# longitud del buffer (hard-coded, un solo digito)
+	 syscall            		# llamar al servicio y escribir.
+	 subi $t4, $t4, 1		#Resta 1 al contador
+	 bne $t4, $zero, write_loop	#Si el contador es 0 sale del loop
+	 
+#CONTROL DE LAZO:
+#Si nos pasamos del rango del arreglo, se acab? el programa. El indice del arreglo est? en $s0.
+
+write_end: addi $s1, $s1, 1
+	   bne $s1, $s2, loop_con_coma
 	
 	la $t9, buffer #cargo buffer
 	addi $t4, $zero, 47 #backslash
