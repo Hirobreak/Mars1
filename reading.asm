@@ -351,7 +351,10 @@ quicksort:
 
 	li $s0, 0 #inicializo el indice del arreglo
 	addi $s0, $s0, 4 #el arreglo comienza una posicion mas
-loopq4:	lw $t1, arreglo($s0) #accedo al numero de ese indice
+	
+loopq4:
+
+	lw $t1, arreglo($s0) #accedo al numero de ese indice
 	addi $s0, $s0, 4 #avanzo
 	lw $t2, arreglo($s0) #accedo el otro numero
 	
@@ -367,7 +370,8 @@ loopq4:	lw $t1, arreglo($s0) #accedo al numero de ese indice
     slti $t3, $t2, 0         # t3 = ?(t2 < 0)
     beq $t3, $zero, loopq1    # if t3 >= 0 then goto loopq1
     
-    jr $ra                   # return
+    jr $ra                   # return address
+	
 
 #----------------------------------------------------------------------
 #    while( 1 )
@@ -386,22 +390,22 @@ loopq2:
     lw $t4, arreglo($t2)           # t4 = array[i]
 
     #----------------------------------------------------------------------
-    # if( array[i] >= array[left] ) then goto loopq3
+    # if( array[i] >= array[left] ) then  loopq3
     #----------------------------------------------------------------------
     sub $t2, $t4, $t3        # t2 = arrat[i] - array[left]
     slti $t5, $t2, 0         # t5 = ?(t2 < 0)
-    bne $t5, $zero, loopq3    # if t5 != 0 then goto loopq3
+    bne $t5, $zero, loopq3    # if t5 != 0 then  loopq3
 
     #----------------------------------------------------------------------
-    # if( i >= (right+1) ) then goto loopq3
+    # if( i >= (right+1) ) then  loopq3
     #----------------------------------------------------------------------
     addi $t5, $a2, 1         # t5 = right + 1
     sub $t2, $t0, $t5        # t2 = i - 5
     slti $t5, $t2, 0         # t5 = ?(t2 < 0)
-    bne $t5, $zero, loopq3    # if t5 != 0 then goto loopq3
+    bne $t5, $zero, loopq3    # if t5 != 0 then loopq3
   
     addi $t0, $t0, 1         # i++
-    j loopq2                  # goto loopq2
+    j loopq2                  #  loopq2
 
 #----------------------------------------------------------------------
 #    while( array[j] > array[left] && j > left-1)j--;
@@ -412,28 +416,28 @@ loopq3:
     lw $t4, arreglo($t2)           # t4 = array[j]
 
     #----------------------------------------------------------------------
-    # if( array[j] <= array[left] ) then goto Bloop
+    # if( array[j] <= array[left] ) then  Bloop
     #----------------------------------------------------------------------
     sub $t2, $t4, $t3        # t2 = arrat[j] - array[left]
     slti $t5, $t2, 0         # t5 = ?(t2 < 0)
-    beq $t5, $zero, Bloop    # if t5 = 0 then goto Bloop
+    beq $t5, $zero, Bloop    # if t5 = 0 then  Bloop
 
     #----------------------------------------------------------------------
-    # if( j <= (left-1) ) then goto Bloop
+    # if( j <= (left-1) ) then  Bloop
     #----------------------------------------------------------------------
     subi $t5, $a1, 1         # t5 = left - 1
     sub $t2, $t1, $t5        # t2 = j - t5
     slti $t5, $t2, 0         # t5 = ?(t2 < 0)
-    beq $t5, $zero, Bloop    # if t5 = 0 then goto Bloop
+    beq $t5, $zero, Bloop    #  Bloop
   
     addi $t1, $t1, -1        # j--
-    j loopq3                  # goto loopq3
+    j loopq3                  #  loopq3
 
 Bloop:
     #----------------------------------------------------------------------
     # Do Swap
     #----------------------------------------------------------------------
-    addi $sp, $sp, -20       # Make 5 words STACK
+    addi $sp, $sp, -20       # preparo
     sw $ra, 16($sp)          #
     sw $a0, 12($sp)          #
     sw $a1, 8($sp)           #
@@ -442,14 +446,14 @@ Bloop:
 
     add, $a1, $a0, $t1       # a1 = array + j
     add, $a0, $a0, $t0       # a0 = array + i
-    jal SWAP                 # Call SWAP
+    jal SWAP                 # llamo
 
     lw $t1, 0($sp)           #
     lw $t0, 4($sp)           #
     lw $a1, 8($sp)           #
     lw $a0, 12($sp)          #
     lw $ra, 16($sp)          #
-    addi $sp, $sp, 20        # Clear STACK
+    addi $sp, $sp, 20        # libero
 
 
     j loopq1                  # goto loopq1
@@ -457,7 +461,7 @@ Bloop:
     #----------------------------------------------------------------------
     # Do Swap
     #----------------------------------------------------------------------
-    addi $sp, $sp, -20       # Make 5 words STACK
+    addi $sp, $sp, -20       # preparo
     sw $ra, 16($sp)          #
     sw $a0, 12($sp)          #
     sw $a1, 8($sp)           #
@@ -466,20 +470,20 @@ Bloop:
 
     add, $a1, $a0, $t1       # a1 = array + j
     add, $a0, $a0, $a1       # a0 = array + left
-    jal SWAP                 # Call SWAP
+    jal SWAP                 # llamo
 
     lw $t1, 0($sp)           #
     lw $t0, 4($sp)           #
     lw $a1, 8($sp)           #
     lw $a0, 12($sp)          #
     lw $ra, 16($sp)          #
-    addi $sp, $sp, 20        # Clear STACK
+    addi $sp, $sp, 20        # libero
 
 Recursive:
     #----------------------------------------------------------------------
     # Quicksort Left
     #----------------------------------------------------------------------
-    addi $sp, $sp, -20       # Make 5 words STACK
+    addi $sp, $sp, -20       # Mpreparo
     sw $ra, 16($sp)          #
     sw $a0, 12($sp)          #
     sw $a1, 8($sp)           #
@@ -487,19 +491,19 @@ Recursive:
     sw $t1, 0($sp)           #
 
     add $a2, $t1, -1         # a2 = j - 1
-    jal quicksort            # Call QUICKSORT(array, left, j-1 )
+    jal quicksort            # llamo
 
     lw $t1, 0($sp)           #
     lw $a2, 4($sp)           #
     lw $a1, 8($sp)           #
     lw $a0, 12($sp)          #
     lw $ra, 16($sp)          #
-    addi $sp, $sp, 20        # Clear STACK
+    addi $sp, $sp, 20        # libero
 
     #----------------------------------------------------------------------
     # QuickSort Right
     #----------------------------------------------------------------------
-    addi $sp, $sp, -20       # Make 5 words STACK
+    addi $sp, $sp, -20       # preparo stack
     sw $ra, 16($sp)          #
     sw $a0, 12($sp)          #
     sw $a1, 8($sp)           #
@@ -507,15 +511,14 @@ Recursive:
     sw $t1, 0($sp)           #
 
     add $a1, $t1, 1          # a1 = j + 1
-    jal quicksort            # Call QUICKSORT(array, j+1, right )
+    jal quicksort            # llamo quicksort
 
     lw $t1, 0($sp)           #
     lw $a2, 4($sp)           #
     lw $a1, 8($sp)           #
     lw $a0, 12($sp)          #
     lw $ra, 16($sp)          #
-    addi $sp, $sp, 20        # Clear STACK
-
+    addi $sp, $sp, 20        # Clear STACKlibero stack
     jr $ra                   # return
 
 #----------------------------------------------------------------------
