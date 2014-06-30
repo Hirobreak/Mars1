@@ -124,15 +124,16 @@ loop2:	lw $t1, ($sp) #cargo el primer valor de la pila
 
 	beq $zero, $zero, loop3 #regreso al loop de sacar numeros
 salSls:
-	
-	beq $t7, $zero, bubble_start
-	li $t9,2
-	beq $t7,$t9 , quicksort
-	j insert_sort	
-bubble_start:	#BubbleSort
 	li $v0, 30 #preparo parametro funcion obtener tiempo
 	syscall #llamo a la funcion obtener tiempo
 	move $s7, $a0 #guardo el tiempo en s7
+	beq $t7, $zero, bubble_start
+	li $t9,2
+	beq $t7,$t9 , quicksort
+	
+	j insert_sort	
+bubble_start:	#BubbleSort
+	
 	
 	move $s2, $t0 #valor de la cantidad de numeros, for externo s2
 	subi $t0, $t0, 1 #el for interno tiene una iteracion menos
@@ -319,6 +320,8 @@ lopsav:	addi $sp, $sp, -4 #me desplazo 4 bytes hacia abajo en la pila para el pr
 	
 	###############################################################################
 	bne $s3, $zero, set
+	li $t9,2
+	beq $t7, $t9,exit
 	
 	
 	
@@ -339,22 +342,16 @@ lw $a2, arreglo($s2)
 #----------------------------------------------------------------------
 #    # $a0 = pivot/inicio del arreglo, $a1 = left, $a2 = right
 #----------------------------------------------------------------------
-QUICKSORT:
+quicksort:
 
 
 
 
-bubble_start:	#BubbleSort
-	li $v0, 30 #preparo parametro funcion obtener tiempo
-	syscall #llamo a la funcion obtener tiempo
-	move $s7, $a0 #guardo el tiempo en s7
 	
-	move $s2, $t0 #valor de la cantidad de numeros, for externo s2
-	subi $t0, $t0, 1 #el for interno tiene una iteracion menos
-loop5:	move $t4, $t0 #
+
 	li $s0, 0 #inicializo el indice del arreglo
 	addi $s0, $s0, 4 #el arreglo comienza una posicion mas
-loop4:	lw $t1, arreglo($s0) #accedo al numero de ese indice
+loopq4:	lw $t1, arreglo($s0) #accedo al numero de ese indice
 	addi $s0, $s0, 4 #avanzo
 	lw $t2, arreglo($s0) #accedo el otro numero
 	
@@ -490,7 +487,7 @@ Recursive:
     sw $t1, 0($sp)           #
 
     add $a2, $t1, -1         # a2 = j - 1
-    jal QUICKSORT            # Call QUICKSORT(array, left, j-1 )
+    jal quicksort            # Call QUICKSORT(array, left, j-1 )
 
     lw $t1, 0($sp)           #
     lw $a2, 4($sp)           #
@@ -510,7 +507,7 @@ Recursive:
     sw $t1, 0($sp)           #
 
     add $a1, $t1, 1          # a1 = j + 1
-    jal QUICKSORT            # Call QUICKSORT(array, j+1, right )
+    jal quicksort            # Call QUICKSORT(array, j+1, right )
 
     lw $t1, 0($sp)           #
     lw $a2, 4($sp)           #
@@ -549,6 +546,12 @@ SWAP:
 	move $a0, $s5
 	syscall
 	#close file
+	li $v0, 16
+	move $a0, $s4
+	syscall
+	
+exit:
+#close file
 	li $v0, 16
 	move $a0, $s4
 	syscall
