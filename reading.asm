@@ -3,11 +3,16 @@
 fout: .asciiz "aleatorios.txt" 
 foutbub: .asciiz "bur_aleatorios.txt" 
 foutins: .asciiz "ins_aleatorios.txt" 
+ 
+menu: .asciiz "0) Bubble Sort\n1)Insertion Sort"
 arreglo: .word  1 : 401
 op: .word 0
 buffer: .resb 33
 	.text
-	addi $t7, $zero, 0	#0 para bubble sort, 1 para insert sort
+	li $v0, 51	#instruccion para recibir un int como input
+	la $a0, menu	# umprimir las opciones del menu en pantalla
+	syscall
+	add $t7, $zero, $a0	#0 para bubble sort, 1 para insert sort
 	li $s3, 10
 	# open file
 	li $v0, 13 #instruccion abrir archivo
