@@ -3,6 +3,8 @@
 fout: .asciiz "aleatorios.txt" 
 foutbub: .asciiz "bur_aleatorios.txt" 
 foutins: .asciiz "ins_aleatorios.txt" 
+bubtimes: .asciiz "bur_tiempos.txt" 
+instimes: .asciiz "ins_tiempos.txt" 
  
 menu: .asciiz "0) Bubble Sort\n1)Insertion Sort"
 arreglo: .word  1 : 401
@@ -14,7 +16,30 @@ buffer: .resb 33
 	syscall
 	add $t7, $zero, $a0	#0 para bubble sort, 1 para insert sort
 	li $s3, 10
+	beq $t7, $zero, bubtim
+	li $t1, 1
+	beq $t7, $t1, instim
+bubtim:	##############archivo de tiempos###################
 	# open file
+	li $v0, 13 #instruccion abrir archivo
+	la $a0, bubtimes #parametro nombre
+	li $a1, 1
+	li $a2, 0
+	syscall #llamo a la instrucción
+	move $s4, $v0 #guardo el registro de información del archivo en s4
+	###################################################
+	beq $zero, $zero, conti
+instim:	##############archivo de tiempos###################
+	# open file
+	li $v0, 13 #instruccion abrir archivo
+	la $a0, instimes #parametro nombre
+	li $a1, 1
+	li $a2, 0
+	syscall #llamo a la instrucción
+	move $s4, $v0 #guardo el registro de información del archivo en s4
+	###################################################
+	beq $zero, $zero, conti
+conti:	# open file
 	li $v0, 13 #instruccion abrir archivo
 	la $a0, fout #parametro nombre
 	li $a1, 0
@@ -79,8 +104,6 @@ loop2:	lw $t1, ($sp) #cargo el primer valor de la pila
 	addi $t0, $t0, 1 #aumento el contador de numeros
 	lw $t8, arreglo($s0) #IMPRIMO CADA ELEMENTO DEL ARREGLO PARA SABER QUE ESTAN BIEN GUARDADOS
 	add $a0, $zero, $t8 #preparo para imprimir
-	li $v0, 1 #intruccion print 
-	syscall #ejecuto
 
 	beq $zero, $zero, loop3 #regreso al loop de sacar numeros
 salSls:
@@ -237,9 +260,45 @@ write_end: addi $s1, $s1, 1
 	li $v0, 30 
 	syscall #ejecuto funcion de obtener tiempo
 	sub $a0, $a0, $s7 #resto los dos tiempos
-	li $v0, 1
-	syscall #los muestro
+	#####################   Grabar los tiempos #####################################
+	#grabar el numero
+	addi $sp, $sp, -16 #desplazo 3*4 bytes la pila
+	addi $t4, $zero, 4 #contador for
+	addi $sp, $sp, 4 #avanzo en la pila
 	
+loopt:	addi $t0, $zero, 10
+	div  $a0, $t0       # $a0/10
+	mflo $a1           # $a1 = quotient
+	mfhi $t0           # $t0 = remainder
+	addi $a0, $t0, 0x30    # convert to ASCII
+	add $t2, $a0, $zero	#cargo en t2 el residuo en ascii
+	sw $t2, ($sp)	#guardo t2 en la pila
+	
+	addi $sp, $sp, 4
+	add $a0, $a1, $zero
+	bne $a0, $zero, loopt
+	#Grabar numeros
+lopsav:	addi $sp, $sp, -4 #me desplazo 4 bytes hacia abajo en la pila para el primer digito
+	#write file
+	li $v0, 15 #instruccion write
+	move $a0, $s4 #cargo la descripcion del archivo que tenia guardada en s6
+	move $a1, $sp #pongo  el valor del digito en ascii como parametro
+	li $a2, 1 
+	syscall #exporto el num al archivo
+	subi $t4, $t4, 1
+	bne $t4, $zero, lopsav
+	la $t9, buffer #cargo buffer
+	li $t4, 32 #espacio
+	sw $t4, buffer #agrego el backslash al buffer
+	#write file
+	li $v0, 15 #instruccion write
+	move $a0, $s4 #cargo la descripcion del archivo que tenia guardada en s4
+	move $a1, $t9 #pongo  el valor del digito en ascii como parametro
+	li $a2, 1
+	syscall 
+
+	
+	###############################################################################
 	bne $s3, $zero, set
 	
 	#close file
@@ -249,5 +308,9 @@ write_end: addi $s1, $s1, 1
 	#close file
 	li $v0, 16
 	move $a0, $s5
+	syscall
+	#close file
+	li $v0, 16
+	move $a0, $s4
 	syscall
 	
